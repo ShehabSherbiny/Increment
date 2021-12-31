@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	service "mockexam/service"
+	"mockexam/utils"
 	"net"
 	"os"
 
@@ -13,7 +14,7 @@ import (
 
 type Server struct {
 	service.UnimplementedIncrementServiceServer
-	value  chan int32
+	counter utils.Counter  
 }
 
 // Example of run: go run . 9000
@@ -38,8 +39,7 @@ func setupServer(port string) {
 
 	grpcServer := grpc.NewServer()
 	s := Server{}
-	s.value = make(chan int32, 1)
-	s.value <- 0
+	
 	service.RegisterIncrementServiceServer(grpcServer, &s)
 
 	log.Printf("Listening at %v", lis.Addr())
@@ -50,9 +50,8 @@ func setupServer(port string) {
 }
 
 func (s *Server) Increment(ctx context.Context, request *service.IncrementRequest) (*service.ValueReturn, error) {
-	value  := <- s.value
+	value := s.counter.Value()
 	log.Printf("Incrementing value to... %v", value+1)
-	s.value <- value+1
-	log.Printf("%v", value)
-	return &service.ValueReturn{Value: value} ,nil
+	s.counter.Increment()
+	return &service.ValueReturn{Value: int32(value)} ,nil
 }
