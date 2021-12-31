@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+option go_package = "./service";
+
+package service;
+
+message IncrementRequest {
+}
+
+message ValueReturn{
+    int32 value = 1;
+}
+
+service IncrementService {
+    rpc Increment(IncrementRequest) returns (ValueReturn);
+}
+
