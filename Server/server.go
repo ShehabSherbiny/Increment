@@ -13,7 +13,7 @@ import (
 
 type Server struct {
 	service.UnimplementedIncrementServiceServer
-	value int32
+	value  chan int32
 }
 
 // Example of run: go run . 9000
@@ -38,7 +38,8 @@ func setupServer(port string) {
 
 	grpcServer := grpc.NewServer()
 	s := Server{}
-
+	s.value = make(chan int32, 1)
+	s.value <- 0
 	service.RegisterIncrementServiceServer(grpcServer, &s)
 
 	log.Printf("Listening at %v", lis.Addr())
@@ -49,9 +50,9 @@ func setupServer(port string) {
 }
 
 func (s *Server) Increment(ctx context.Context, request *service.IncrementRequest) (*service.ValueReturn, error) {
-	value := s.value
-	s.value++
-	log.Printf("Incrementing value to... %v", s.value)
-
+	value  := <- s.value
+	log.Printf("Incrementing value to... %v", value+1)
+	s.value <- value+1
+	log.Printf("%v", value)
 	return &service.ValueReturn{Value: value} ,nil
 }
